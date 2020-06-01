@@ -160,7 +160,7 @@ class AddLiquidity extends Component {
     const deadline = block.timestamp + 300;
     const MAX_LIQUIDITY_SLIPPAGE = 0.025;
     const minLiquidity = this.isNewExchange() ? BN(0) : liquidityMinted.multipliedBy(1 - MAX_LIQUIDITY_SLIPPAGE);
-    const maxTokens = tokenAmount.multipliedBy(1 + MAX_LIQUIDITY_SLIPPAGE);
+    const maxTokens = this.isNewExchange() ? tokenAmount : tokenAmount.multipliedBy(1 + MAX_LIQUIDITY_SLIPPAGE);
 
     try {
       exchange.methods.addLiquidity(minLiquidity.toFixed(0), maxTokens.toFixed(0), deadline).send({
@@ -547,10 +547,10 @@ class AddLiquidity extends Component {
             ? (
               <div className="pool__new-exchange-warning">
                 <div className="pool__new-exchange-warning-text">
-                  You are the first person to add liquidity🚰!
+                  🚰 You are the first person to add liquidity to this token!
                 </div>
                 <div className="pool__new-exchange-warning-text">
-                  {`A new exchange rate will be set based on your deposits. Please make sure that your ETH and ${label} deposits have the same fiat value.`}
+                  {`The initial exchange rate will be set based on your deposits. Please make sure that your ETH and ${label} deposits have the same fiat value.`}
                 </div>
               </div>
             )
