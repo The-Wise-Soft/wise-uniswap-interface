@@ -1,7 +1,10 @@
-# Uniswap Frontend
-This is the repository for [uniswap.io](https://uniswap.io/). Uniswap is an interface for exchange of ERC20 tokens on Ethereum. To learn more about the project:
+# Uniswap - a decentralized exchange for ERC20 tokens
 
-* Read the docs: [https://docs.uniswap.io/](https://docs.uniswap.io/)
-* Join the reddit: [https://www.reddit.com/r/Uniswap/](https://www.reddit.com/r/UniSwap/)
-* Email me: [hayden@uniswap.io](mailto:hayden@uniswap.io)
-* Read the whitepaper: [Link](https://hackmd.io/C-DvwDSfSxuh-Gd4WKE_ig)
+Read the Whitepaper: https://hackmd.io/C-DvwDSfSxuh-Gd4WKE_ig
+
+Visit the website: https://uniswap.io/
+
+Read the smart contracts: https://github.com/uniswap
+
+Send me an email: hayden@uniswap.io
+<!-- ETH Address: 0x4779721CaC18A46DbCF148f2Dd7A8E6cc1F90078 -->

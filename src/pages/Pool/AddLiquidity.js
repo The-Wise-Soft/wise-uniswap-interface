@@ -547,10 +547,10 @@ class AddLiquidity extends Component {
             ? (
               <div className="pool__new-exchange-warning">
                 <div className="pool__new-exchange-warning-text">
-                  🚰 You are the first person to add liquidity to this token!
+                  You are the first person to add liquidity🚰!
                 </div>
                 <div className="pool__new-exchange-warning-text">
-                  {`The initial exchange rate will be set based on your deposits. Please make sure that your ETH and ${label} deposits have the same fiat value.`}
+                  {`A new exchange rate will be set based on your deposits. Please make sure that your ETH and ${label} deposits have the same fiat value.`}
                 </div>
               </div>
             )
