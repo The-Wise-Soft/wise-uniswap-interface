@@ -8,8 +8,7 @@ import ModeSelector from "./ModeSelector";
 import CurrencyInputPanel from "../../components/CurrencyInputPanel";
 import { selectors, addPendingTx } from '../../ducks/web3connect';
 import OversizedPanel from "../../components/OversizedPanel";
-import ArrowDownBlue from "../../assets/images/arrow-down-blue.svg";
-import ArrowDownGrey from "../../assets/images/arrow-down-grey.svg";
+import ArrowPlus from "../../assets/images/arrow-down-blue.svg";
 import EXCHANGE_ABI from "../../abi/exchange";
 import promisify from "../../helpers/web3-promisfy";
 import ReactGA from "react-ga";
@@ -278,7 +277,7 @@ class RemoveLiquidity extends Component {
         />
         <OversizedPanel>
           <div className="swap__down-arrow-background">
-            <img className="swap__down-arrow" src={isValid ? ArrowDownBlue : ArrowDownGrey} />
+            <img className="swap__down-arrow" src={ArrowPlus} />
           </div>
         </OversizedPanel>
         { this.renderOutput() }

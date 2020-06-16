@@ -14,8 +14,7 @@ import CurrencyInputPanel from '../../components/CurrencyInputPanel';
 import OversizedPanel from '../../components/OversizedPanel';
 import DropdownBlue from "../../assets/images/dropdown-blue.svg";
 import DropupBlue from "../../assets/images/dropup-blue.svg";
-import ArrowDownBlue from '../../assets/images/arrow-down-blue.svg';
-import ArrowDownGrey from '../../assets/images/arrow-down-grey.svg';
+import ArrowDown from '../../assets/images/arrow-down-blue.svg';
 import EXCHANGE_ABI from '../../abi/exchange';
 
 import "./swap.scss";
@@ -749,7 +748,7 @@ class Swap extends Component {
           />
           <OversizedPanel>
             <div className="swap__down-arrow-background">
-              <img className="swap__down-arrow" src={isValid ? ArrowDownBlue : ArrowDownGrey} />
+              <img className="swap__down-arrow" src={ArrowDown} />
             </div>
           </OversizedPanel>
           <CurrencyInputPanel

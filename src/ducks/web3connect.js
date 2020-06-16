@@ -342,30 +342,18 @@ export const sync = () => async (dispatch, getState) => {
     });
 
   pending.forEach(async txId => {
-    try {
-      const data = await web3.eth.getTransactionReceipt(txId) || {};
-
+    const data = await web3.eth.getTransactionReceipt(txId) || {};
+    if (data.status) {
       dispatch({
         type: REMOVE_PENDING_TX,
         payload: txId,
       });
 
-      if (data.status) {
-        dispatch({
-          type: ADD_CONFIRMED_TX,
-          payload: txId,
-        });
-      } else {
-        // TODO: dispatch ADD_REJECTED_TX
-      }
-    } catch (err) {
       dispatch({
-        type: REMOVE_PENDING_TX,
+        type: ADD_CONFIRMED_TX,
         payload: txId,
       });
-      // TODO: dispatch ADD_REJECTED_TX
     }
-
   });
 };
 
