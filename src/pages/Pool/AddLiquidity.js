@@ -8,7 +8,8 @@ import OversizedPanel from '../../components/OversizedPanel';
 import NavigationTabs from '../../components/NavigationTabs';
 import Modal from '../../components/Modal';
 import { selectors, addPendingTx } from '../../ducks/web3connect';
-import ArrowDown from '../../assets/images/plus-blue.svg';
+import PlusBlue from '../../assets/images/plus-blue.svg';
+import PlusGrey from '../../assets/images/plus-grey.svg';
 import DropdownBlue from "../../assets/images/dropdown-blue.svg";
 import DropupBlue from "../../assets/images/dropup-blue.svg";
 import ModeSelector from './ModeSelector';
@@ -257,10 +258,10 @@ class AddLiquidity extends Component {
       return;
     }
 
-    const { value: tokenValue } = selectors().getBalance(fromToken[token], token);
+    const { value: tokenValue, decimals } = selectors().getBalance(fromToken[token], token);
     const { value: ethValue } = selectors().getBalance(fromToken[token], eth);
 
-    return tokenValue.dividedBy(ethValue);
+    return tokenValue.multipliedBy(10 ** (18 - decimals)).dividedBy(ethValue);
   }
 
   validate() {
@@ -367,7 +368,7 @@ class AddLiquidity extends Component {
       <div className="pool__summary-panel">
         <div className="pool__exchange-rate-wrapper">
           <span className="pool__exchange-rate">Exchange Rate</span>
-          <span>{`1 ETH = ${tokenValue.dividedBy(ethValue).toFixed(4)} ${label}`}</span>
+          <span>{`1 ETH = ${tokenValue.multipliedBy(10 ** (18 - decimals)).dividedBy(ethValue).toFixed(4)} ${label}`}</span>
         </div>
         <div className="pool__exchange-rate-wrapper">
           <span className="swap__exchange-rate">Current Pool Size</span>
@@ -573,7 +574,7 @@ class AddLiquidity extends Component {
         />
         <OversizedPanel>
           <div className="swap__down-arrow-background">
-            <img className="swap__down-arrow" src={ArrowDown} />
+            <img className="swap__down-arrow" src={isValid ? PlusBlue : PlusGrey} />
           </div>
         </OversizedPanel>
         <CurrencyInputPanel
