@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { withNamespaces } from 'react-i18next';
 import { dismissBetaMessage } from '../../ducks/app';
 import {Tab, Tabs} from "../Tab";
 
@@ -39,18 +38,18 @@ class NavigationTabs extends Component {
   }
 
   render() {
-    const { t, showBetaMessage, className, dismissBetaMessage } = this.props;
+    const { showBetaMessage, className, dismissBetaMessage } = this.props;
     return (
       <div>
         <Tabs className={className}>
-          { this.renderTab(t("swap"), '/swap', /swap/) }
-          { this.renderTab(t("send"), '/send', /send/) }
-          { this.renderTab(t("pool"), '/add-liquidity', /add-liquidity|remove-liquidity|create-exchange/) }
+          { this.renderTab('Swap', '/swap', /swap/) }
+          { this.renderTab('Send', '/send', /send/) }
+          { this.renderTab('Pool', '/add-liquidity', /add-liquidity|remove-liquidity|create-exchange/) }
         </Tabs>
         {
           showBetaMessage && (
             <div className="beta-message" onClick={dismissBetaMessage}>
-              💀 {t("betaWarning")}
+              💀 This project is in beta. Use at your own risk.
             </div>
           )
         }
@@ -67,5 +66,5 @@ export default withRouter(
     dispatch => ({
       dismissBetaMessage: () => dispatch(dismissBetaMessage()),
     }),
-  )(withNamespaces()(NavigationTabs))
+  )(NavigationTabs)
 );
