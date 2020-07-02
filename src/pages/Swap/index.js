@@ -556,8 +556,7 @@ class Swap extends Component {
 
     return (
       <ContextualInfo
-        openDetailsText={t("transactionDetails")}
-        closeDetailsText={t("hideDetails")}
+        openModalText={t("transactionDetails")}
         contextualInfo={contextualInfo}
         isError={isError}
         renderTransactionDetails={this.renderTransactionDetails}
