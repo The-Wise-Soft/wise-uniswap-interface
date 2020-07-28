@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react'
+import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react'
 import { useWeb3Context } from 'web3-react'
 import { safeAccess } from '../utils'
 
@@ -51,11 +51,13 @@ export default function Provider({ children }) {
     dispatch({ type: UPDATE_BLOCK_NUMBER, payload: { networkId, blockNumber } })
   }, [])
 
-  return (
-    <ApplicationContext.Provider value={[state, { dismissBetaMessage, updateBlockNumber }]}>
-      {children}
-    </ApplicationContext.Provider>
-  )
+  const contextValue = useMemo(() => [state, { dismissBetaMessage, updateBlockNumber }], [
+    state,
+    dismissBetaMessage,
+    updateBlockNumber
+  ])
+
+  return <ApplicationContext.Provider value={contextValue}>{children}</ApplicationContext.Provider>
 }
 
 export function Updater() {

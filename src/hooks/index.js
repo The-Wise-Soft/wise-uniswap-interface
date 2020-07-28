@@ -1,9 +1,8 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useWeb3Context } from 'web3-react'
 
-import ERC20_ABI from '../constants/abis/erc20'
-import { getContract, getFactoryContract, getExchangeContract, isAddress } from '../utils'
-import copy from 'copy-to-clipboard'
+import ERC20_ABI from '../abi/erc20'
+import { getContract, getFactoryContract, getExchangeContract } from '../utils'
 
 // modified from https://usehooks.com/useDebounce/
 export function useDebounce(value, delay) {
@@ -29,13 +28,8 @@ export function useDebounce(value, delay) {
 // modified from https://usehooks.com/useKeyPress/
 export function useBodyKeyDown(targetKey, onKeyDown, suppressOnKeyDown = false) {
   const downHandler = useCallback(
-    event => {
-      const {
-        target: { tagName },
-        key
-      } = event
+    ({ target: { tagName }, key }) => {
       if (key === targetKey && tagName === 'BODY' && !suppressOnKeyDown) {
-        event.preventDefault()
         onKeyDown()
       }
     },
@@ -48,35 +42,6 @@ export function useBodyKeyDown(targetKey, onKeyDown, suppressOnKeyDown = false) 
       window.removeEventListener('keydown', downHandler)
     }
   }, [downHandler])
-}
-
-export function useENSName(address) {
-  const { library } = useWeb3Context()
-
-  const [ENSName, setENSNname] = useState()
-
-  useEffect(() => {
-    if (isAddress(address)) {
-      let stale = false
-
-      library.lookupAddress(address).then(name => {
-        if (!stale) {
-          if (name) {
-            setENSNname(name)
-          } else {
-            setENSNname(null)
-          }
-        }
-      })
-
-      return () => {
-        stale = true
-        setENSNname()
-      }
-    }
-  }, [library, address])
-
-  return ENSName
 }
 
 // returns null on errors
@@ -128,27 +93,4 @@ export function useExchangeContract(exchangeAddress, withSignerIfPossible = true
       return null
     }
   }, [exchangeAddress, library, withSignerIfPossible, account])
-}
-
-export function useCopyClipboard(timeout = 500) {
-  const [isCopied, setIsCopied] = useState(false)
-
-  const staticCopy = useCallback(text => {
-    const didCopy = copy(text)
-    setIsCopied(didCopy)
-  }, [])
-
-  useEffect(() => {
-    if (isCopied) {
-      const hide = setTimeout(() => {
-        setIsCopied(false)
-      }, timeout)
-
-      return () => {
-        clearTimeout(hide)
-      }
-    }
-  }, [isCopied, setIsCopied, timeout])
-
-  return [isCopied, staticCopy]
 }

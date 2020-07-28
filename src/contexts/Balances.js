@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react'
+import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react'
 import { useWeb3Context } from 'web3-react'
 
 import { safeAccess, isAddress, getEtherBalance, getTokenBalance } from '../utils'
@@ -44,7 +44,9 @@ export default function Provider({ children }) {
     dispatch({ type: UPDATE, payload: { networkId, address, tokenAddress, value, blockNumber } })
   }, [])
 
-  return <BalancesContext.Provider value={[state, { update }]}>{children}</BalancesContext.Provider>
+  const contextValue = useMemo(() => [state, { update }], [state, update])
+
+  return <BalancesContext.Provider value={contextValue}>{children}</BalancesContext.Provider>
 }
 
 export function useAddressBalance(address, tokenAddress) {
@@ -64,13 +66,14 @@ export function useAddressBalance(address, tokenAddress) {
       library
     ) {
       let stale = false
+
       ;(tokenAddress === 'ETH' ? getEtherBalance(address, library) : getTokenBalance(tokenAddress, address, library))
         .then(value => {
           if (!stale) {
             update(networkId, address, tokenAddress, value, globalBlockNumber)
           }
         })
-        .catch(() => {
+        .catch(e => {
           if (!stale) {
             update(networkId, address, tokenAddress, null, globalBlockNumber)
           }
