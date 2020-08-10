@@ -6,7 +6,7 @@ import '@reach/dialog/styles.css'
 
 const AnimatedDialogOverlay = animated(DialogOverlay)
 const StyledDialogOverlay = styled(AnimatedDialogOverlay).attrs({
-  suppressclassnamewarning: 'true'
+  suppressClassNameWarning: true
 })`
   &[data-reach-dialog-overlay] {
     z-index: 2;

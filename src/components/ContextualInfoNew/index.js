@@ -92,10 +92,10 @@ export default function ContextualInfo({
   renderTransactionDetails = () => {},
   isError = false,
   slippageWarning,
-  highSlippageWarning,
-  dropDownContent
+  highSlippageWarning
 }) {
   const [showDetails, setShowDetails] = useState(false)
+
   return !allowExpand ? (
     <SummaryWrapper>{contextualInfo}</SummaryWrapper>
   ) : (
@@ -117,7 +117,7 @@ export default function ContextualInfo({
           )}
         </>
       </SummaryWrapperContainer>
-      {showDetails && <Details>{dropDownContent()}</Details>}
+      {showDetails && <Details>{renderTransactionDetails()}</Details>}
     </>
   )
 }
