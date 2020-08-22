@@ -1,5 +1,5 @@
 import styled, { keyframes } from 'styled-components'
-import { darken } from 'polished'
+import { lighten, darken } from 'polished'
 
 export const Button = styled.button.attrs(({ warning, theme }) => ({
   backgroundColor: warning ? theme.salmonRed : theme.royalBlue
@@ -18,11 +18,11 @@ export const Button = styled.button.attrs(({ warning, theme }) => ({
 
   :hover,
   :focus {
-    background-color: ${({ backgroundColor }) => darken(0.05, backgroundColor)};
+    background-color: ${({ backgroundColor }) => lighten(0.05, backgroundColor)};
   }
 
   :active {
-    background-color: ${({ backgroundColor }) => darken(0.1, backgroundColor)};
+    background-color: ${({ backgroundColor }) => darken(0.05, backgroundColor)};
   }
 
   :disabled {

@@ -2,8 +2,10 @@ import React, { createContext, useContext, useReducer, useMemo, useCallback, use
 import { useWeb3Context } from 'web3-react'
 import { safeAccess } from '../utils'
 
+const SHOW_BETA_MESSAGE = 'SHOW_BETA_MESSAGE'
 const BLOCK_NUMBERS = 'BLOCK_NUMBERS'
 
+const DISMISS_BETA_MESSAGE = 'DISMISS_BETA_MESSAGE'
 const UPDATE_BLOCK_NUMBER = 'UPDATE_BLOCK_NUMBER'
 
 const ApplicationContext = createContext()
@@ -14,6 +16,12 @@ function useApplicationContext() {
 
 function reducer(state, { type, payload }) {
   switch (type) {
+    case DISMISS_BETA_MESSAGE: {
+      return {
+        ...state,
+        [SHOW_BETA_MESSAGE]: false
+      }
+    }
     case UPDATE_BLOCK_NUMBER: {
       const { networkId, blockNumber } = payload
       return {
@@ -32,15 +40,25 @@ function reducer(state, { type, payload }) {
 
 export default function Provider({ children }) {
   const [state, dispatch] = useReducer(reducer, {
+    [SHOW_BETA_MESSAGE]: true,
     [BLOCK_NUMBERS]: {}
   })
 
+  const dismissBetaMessage = useCallback(() => {
+    dispatch({ type: DISMISS_BETA_MESSAGE })
+  }, [])
   const updateBlockNumber = useCallback((networkId, blockNumber) => {
     dispatch({ type: UPDATE_BLOCK_NUMBER, payload: { networkId, blockNumber } })
   }, [])
 
   return (
-    <ApplicationContext.Provider value={useMemo(() => [state, { updateBlockNumber }], [state, updateBlockNumber])}>
+    <ApplicationContext.Provider
+      value={useMemo(() => [state, { dismissBetaMessage, updateBlockNumber }], [
+        state,
+        dismissBetaMessage,
+        updateBlockNumber
+      ])}
+    >
       {children}
     </ApplicationContext.Provider>
   )
@@ -81,6 +99,12 @@ export function Updater() {
   }, [networkId, library, updateBlockNumber])
 
   return null
+}
+
+export function useBetaMessageManager() {
+  const [state, { dismissBetaMessage }] = useApplicationContext()
+
+  return [safeAccess(state, [SHOW_BETA_MESSAGE]), dismissBetaMessage]
 }
 
 export function useBlockNumber() {
