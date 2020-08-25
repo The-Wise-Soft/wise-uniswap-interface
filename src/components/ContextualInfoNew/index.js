@@ -36,7 +36,7 @@ const Details = styled.div`
   padding-bottom: 1rem;
   border-radius: 1rem;
   font-size: 0.75rem;
-  margin-top: 1rem;
+  margin: 1rem 0.5rem 0 0.5rem;
 `
 
 const ErrorSpan = styled.span`
@@ -90,7 +90,6 @@ export default function ContextualInfo({
   closeDetailsText = 'Hide Details',
   contextualInfo = '',
   allowExpand = false,
-  renderTransactionDetails = () => {},
   isError = false,
   slippageWarning,
   highSlippageWarning,
