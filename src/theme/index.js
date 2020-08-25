@@ -38,9 +38,6 @@ const theme = {
   chaliceGray: '#AEAEAE',
   doveGray: '#737373',
   mineshaftGray: '#2B2B2B',
-  buttonOutlineGrey: '#f2f2f2',
-  //blacks
-  charcoalBlack: '#404040',
   // blues
   zumthorBlue: '#EBF4FF',
   malibuBlue: '#5CA2FF',
@@ -56,7 +53,6 @@ const theme = {
   // pink
   uniswapPink: '#DC6BE5',
   connectedGreen: '#27AE60',
-
   // media queries
   mediaWidth: mediaWidthTemplates,
   // css snippets
