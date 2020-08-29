@@ -287,7 +287,6 @@ const ValueWrapper = styled.span`
   background-color: ${({ theme }) => darken(0.04, theme.concreteGray)};
   border-radius: 12px;
   font-variant: tabular-nums;
-  vertical
 `
 
 export default function TransactionDetails(props) {
@@ -481,10 +480,10 @@ export default function TransactionDetails(props) {
               }
             >
               {activeIndex === 4 && warningType.toString() === 'none' && 'Custom slippage value entered'}
-              {warningType === WARNING_TYPE.emptyInput && 'Enter a slippage percentage.'}
-              {warningType === WARNING_TYPE.invalidEntryBound && 'Please select value less than 50%'}
-              {warningType === WARNING_TYPE.riskyEntryHigh && 'Your transaction may be frontrun.'}
-              {warningType === WARNING_TYPE.riskyEntryLow && 'Your transaction may fail.'}
+              {warningType === WARNING_TYPE.emptyInput && 'Enter a slippage percentage'}
+              {warningType === WARNING_TYPE.invalidEntryBound && 'Please select a value no greater than 50%'}
+              {warningType === WARNING_TYPE.riskyEntryHigh && 'Your transaction may be frontrun'}
+              {warningType === WARNING_TYPE.riskyEntryLow && 'Your transaction may fail'}
             </BottomError>
           </SlippageRow>
         </SlippageSelector>
@@ -496,7 +495,7 @@ export default function TransactionDetails(props) {
     setActiveIndex(4)
     inputRef.current.focus()
     // if there's a value, evaluate the bounds
-    checkBounds(userInput)
+    checkBounds(debouncedInput)
   }
 
   // used for slippage presets
@@ -512,26 +511,26 @@ export default function TransactionDetails(props) {
     setWarningType(WARNING_TYPE.none)
     props.setcustomSlippageError('valid')
 
-    if (slippageValue === '') {
+    if (slippageValue === '' || slippageValue === '.') {
       props.setcustomSlippageError('invalid')
       return setWarningType(WARNING_TYPE.emptyInput)
     }
 
     // check bounds and set errors
-    if (slippageValue < 0 || slippageValue > 50) {
+    if (Number(slippageValue) < 0 || Number(slippageValue) > 50) {
       props.setcustomSlippageError('invalid')
       return setWarningType(WARNING_TYPE.invalidEntryBound)
     }
-    if (slippageValue >= 0 && slippageValue < 0.1) {
+    if (Number(slippageValue) >= 0 && Number(slippageValue) < 0.1) {
       props.setcustomSlippageError('valid')
       setWarningType(WARNING_TYPE.riskyEntryLow)
     }
-    if (slippageValue > 5) {
+    if (Number(slippageValue) > 5) {
       props.setcustomSlippageError('warning')
       setWarningType(WARNING_TYPE.riskyEntryHigh)
     }
     //update the actual slippage value in parent
-    updateSlippage(slippageValue)
+    updateSlippage(Number(slippageValue))
   }
 
   // check that the theyve entered number and correct decimal
@@ -548,7 +547,7 @@ export default function TransactionDetails(props) {
 
   const updateSlippage = newSlippage => {
     // round to 2 decimals to prevent ethers error
-    let numParsed = parseFloat((newSlippage * 100).toFixed(2))
+    let numParsed = parseInt(newSlippage * 100)
 
     // set both slippage values in parents
     props.setRawSlippage(numParsed)
