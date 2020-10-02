@@ -24,7 +24,7 @@ import { ReactComponent as Close } from '../../assets/images/x.svg'
 import { transparentize } from 'polished'
 import { Spinner } from '../../theme'
 import Circle from '../../assets/images/circle-grey.svg'
-import { useETHPriceInUSD, useAllBalances } from '../../contexts/Balances'
+import { useUSDPrice } from '../../contexts/Application'
 
 const GAS_MARGIN = ethers.utils.bigNumberify(1000)
 
@@ -439,7 +439,7 @@ export default function CurrencyInputPanel({
   )
 }
 
-function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect }) {
+function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect, allBalances }) {
   const { t } = useTranslation()
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -450,24 +450,19 @@ function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect }) {
   const { account } = useWeb3React()
 
   // BigNumber.js instance
-  const ethPrice = useETHPriceInUSD()
-
-  // all balances for both account and exchanges
-  let allBalances = useAllBalances()
+  const ethPrice = useUSDPrice()
 
   const _usdAmounts = Object.keys(allTokens).map(k => {
-    if (ethPrice && allBalances[account] && allBalances[account][k]) {
-      let ethRate = 1 // default for ETH
-      let exchangeDetails = allBalances[allTokens[k].exchangeAddress]
-      if (exchangeDetails && exchangeDetails[k] && exchangeDetails['ETH']) {
-        const tokenBalance = new BigNumber(exchangeDetails[k].value.toString())
-        const ethBalance = new BigNumber(exchangeDetails['ETH'].value.toString())
-        ethRate = ethBalance.div(tokenBalance)
-      }
-      const USDRate = ethPrice
-        .times(ethRate)
-        .times(new BigNumber(10).pow(allTokens[k].decimals).div(new BigNumber(10).pow(18)))
-      const balanceBigNumber = new BigNumber(allBalances[account][k].value.toString())
+    if (
+      ethPrice &&
+      allBalances &&
+      allBalances[k] &&
+      allBalances[k].ethRate &&
+      !allBalances[k].ethRate.isNaN() &&
+      allBalances[k].balance
+    ) {
+      const USDRate = ethPrice.times(allBalances[k].ethRate)
+      const balanceBigNumber = new BigNumber(allBalances[k].balance.toString())
       const usdBalance = balanceBigNumber.times(USDRate).div(new BigNumber(10).pow(allTokens[k].decimals))
       return usdBalance
     } else {
@@ -511,11 +506,11 @@ function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect }) {
         let balance
         let usdBalance
         // only update if we have data
-        if (k === 'ETH' && allBalances[account] && allBalances[account][k]) {
-          balance = formatEthBalance(allBalances[account][k].value)
+        if (k === 'ETH' && allBalances && allBalances[k]) {
+          balance = formatEthBalance(allBalances[k].balance)
           usdBalance = usdAmounts[k]
-        } else if (allBalances[account] && allBalances[account][k]) {
-          balance = formatTokenBalance(allBalances[account][k].value, allTokens[k].decimals)
+        } else if (allBalances && allBalances[k]) {
+          balance = formatTokenBalance(allBalances[k].balance, allTokens[k].decimals)
           usdBalance = usdAmounts[k]
         }
         return {
@@ -526,7 +521,7 @@ function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect }) {
           usdBalance: usdBalance
         }
       })
-  }, [allBalances, allTokens, usdAmounts, account])
+  }, [allBalances, allTokens, usdAmounts])
 
   const filteredTokenList = useMemo(() => {
     return tokenList.filter(tokenEntry => {
@@ -585,13 +580,7 @@ function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect }) {
               '-'
             )}
             <TokenRowUsd>
-              {usdBalance
-                ? usdBalance.isZero()
-                  ? ''
-                  : usdBalance.lt(0.01)
-                  ? '<$0.01'
-                  : '$' + formatToUsd(usdBalance)
-                : ''}
+              {usdBalance ? (usdBalance.lt(0.01) ? '<$0.01' : '$' + formatToUsd(usdBalance)) : ''}
             </TokenRowUsd>
           </TokenRowRight>
         </TokenModalRow>

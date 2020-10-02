@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useMemo, useCallback, useEffect } from 'react'
+import { ethers } from 'ethers'
 
 import { useWeb3React } from '../hooks'
 import {
@@ -280,6 +281,12 @@ const INITIAL_TOKENS_CONTEXT = {
       [DECIMALS]: 18,
       [EXCHANGE_ADDRESS]: '0x2Bf5A5bA29E60682fC56B2Fcf9cE07Bef4F6196f'
     },
+    '0x4575f41308EC1483f3d399aa9a2826d74Da13Deb': {
+      [NAME]: 'Orchid',
+      [SYMBOL]: 'OXT',
+      [DECIMALS]: 18,
+      [EXCHANGE_ADDRESS]: '0xe9a5bbe41dc63D555E06746b047d624E3343EA52'
+    },
     '0xD56daC73A4d6766464b38ec6D91eB45Ce7457c44': {
       [NAME]: 'Panvala pan',
       [SYMBOL]: 'PAN',
@@ -339,12 +346,6 @@ const INITIAL_TOKENS_CONTEXT = {
       [SYMBOL]: 'REP',
       [DECIMALS]: 18,
       [EXCHANGE_ADDRESS]: '0x48B04d2A05B6B604d8d5223Fd1984f191DED51af'
-    },
-    '0x168296bb09e24A88805CB9c33356536B980D3fC5': {
-      [NAME]: 'RHOC',
-      [SYMBOL]: 'RHOC',
-      [DECIMALS]: 8,
-      [EXCHANGE_ADDRESS]: '0x394e524b47A3AB3D3327f7fF6629dC378c1494a3'
     },
     '0x9469D013805bFfB7D3DEBe5E7839237e535ec483': {
       [NAME]: 'Darwinia Network Native Token',
@@ -614,10 +615,23 @@ export function useTokenDetails(tokenAddress) {
   return { name, symbol, decimals, exchangeAddress }
 }
 
-export function useAllTokenDetails() {
+export function useAllTokenDetails(requireExchange = true) {
   const { chainId } = useWeb3React()
 
   const [state] = useTokensContext()
+  const tokenDetails = { ...ETH, ...(safeAccess(state, [chainId]) || {}) }
 
-  return useMemo(() => ({ ...ETH, ...(safeAccess(state, [chainId]) || {}) }), [state, chainId])
+  return requireExchange
+    ? Object.keys(tokenDetails)
+        .filter(
+          tokenAddress =>
+            tokenAddress === 'ETH' ||
+            (safeAccess(tokenDetails, [tokenAddress, EXCHANGE_ADDRESS]) &&
+              safeAccess(tokenDetails, [tokenAddress, EXCHANGE_ADDRESS]) !== ethers.constants.AddressZero)
+        )
+        .reduce((accumulator, tokenAddress) => {
+          accumulator[tokenAddress] = tokenDetails[tokenAddress]
+          return accumulator
+        }, {})
+    : tokenDetails
 }

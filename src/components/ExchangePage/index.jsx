@@ -17,6 +17,7 @@ import { useExchangeContract } from '../../hooks'
 import { useTokenDetails } from '../../contexts/Tokens'
 import { useTransactionAdder } from '../../contexts/Transactions'
 import { useAddressBalance, useExchangeReserves } from '../../contexts/Balances'
+import { useFetchAllBalances } from '../../contexts/AllBalances'
 import { useAddressAllowance } from '../../contexts/Allowances'
 import { useWalletModalToggle } from '../../contexts/Application'
 
@@ -32,7 +33,7 @@ const ALLOWED_SLIPPAGE_DEFAULT = 100
 const TOKEN_ALLOWED_SLIPPAGE_DEFAULT = 100
 
 // 15 minutes, denominated in seconds
-const DEFAULT_DEADLINE_FROM_NOW = 60 * 15
+const DEADLINE_FROM_NOW = 60 * 15
 
 // % above the calculated gas cost that we actually send, denominated in bips
 const GAS_MARGIN = ethers.utils.bigNumberify(1000)
@@ -265,8 +266,6 @@ export default function ExchangePage({ initialCurrency, sending = false, params 
     }
     return ''
   }
-
-  const [deadlineFromNow, setDeadlineFromNow] = useState(DEFAULT_DEADLINE_FROM_NOW)
 
   const [rawSlippage, setRawSlippage] = useState(() => initialSlippage())
   const [rawTokenSlippage, setRawTokenSlippage] = useState(() => initialSlippage(true))
@@ -555,8 +554,8 @@ export default function ExchangePage({ initialCurrency, sending = false, params 
   const highSlippageWarning = percentSlippage && percentSlippage.gte(ethers.utils.parseEther('.2')) // [20+%
 
   const isValid = sending
-    ? exchangeRate && inputError === null && independentError === null && recipientError === null && deadlineFromNow
-    : exchangeRate && inputError === null && independentError === null && deadlineFromNow
+    ? exchangeRate && inputError === null && independentError === null && recipientError === null
+    : exchangeRate && inputError === null && independentError === null
 
   const estimatedText = `(${t('estimated')})`
   function formatBalance(value) {
@@ -564,7 +563,7 @@ export default function ExchangePage({ initialCurrency, sending = false, params 
   }
 
   async function onSwap() {
-    const deadline = Math.ceil(Date.now() / 1000) + deadlineFromNow
+    const deadline = Math.ceil(Date.now() / 1000) + DEADLINE_FROM_NOW
 
     let estimate, method, args, value
     if (independentField === INPUT) {
@@ -646,12 +645,15 @@ export default function ExchangePage({ initialCurrency, sending = false, params 
 
   const [customSlippageError, setcustomSlippageError] = useState('')
 
+  const allBalances = useFetchAllBalances()
+
   const toggleWalletModal = useWalletModalToggle()
 
   return (
     <>
       <CurrencyInputPanel
         title={t('input')}
+        allBalances={allBalances}
         description={inputValueFormatted && independentField === OUTPUT ? estimatedText : ''}
         extraText={inputBalanceFormatted && formatBalance(inputBalanceFormatted)}
         extraTextClickHander={() => {
@@ -700,6 +702,7 @@ export default function ExchangePage({ initialCurrency, sending = false, params 
       </OversizedPanel>
       <CurrencyInputPanel
         title={t('output')}
+        allBalances={allBalances}
         description={outputValueFormatted && independentField === INPUT ? estimatedText : ''}
         extraText={outputBalanceFormatted && formatBalance(outputBalanceFormatted)}
         onCurrencySelected={outputCurrency => {
@@ -761,8 +764,6 @@ export default function ExchangePage({ initialCurrency, sending = false, params 
         rawSlippage={rawSlippage}
         slippageWarning={slippageWarning}
         highSlippageWarning={highSlippageWarning}
-        setDeadline={setDeadlineFromNow}
-        deadline={deadlineFromNow}
         inputError={inputError}
         independentError={independentError}
         inputCurrency={inputCurrency}
