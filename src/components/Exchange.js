@@ -161,7 +161,7 @@ class Exchange extends Component {
         <div className="value border pa2">
           <input type="number" readOnly={true} value={(this.props.exchange.outputValue/10**18).toFixed(6)} placeholder="0"/>
           <SelectToken token={this.props.exchange.outputToken} onSelectToken={this.onSelectToken} type="output"/>
-          <p className="dropdown">{'<'}</p>
+           <p className="dropdown">{'<'}</p>
         </div>
       </section>
     )
@@ -173,20 +173,20 @@ const mapStateToProps = state => ({
     exchange: state.exchange
 })
 
-  const mapDispatchToProps = (dispatch) => {
-    return bindActionCreators({
-      setExchangeInputValue,
-      setExchangeOutputValue,
-      setExchangeRate,
-      setExchangeFee,
-      setInteractionState,
-      setInputToken,
-      setOutputToken,
-      setExchangeType,
-      setInputBalance,
-      setOutputBalance,
-      setAllowanceApprovalState
-    }, dispatch);
-  }
+const mapDispatchToProps = (dispatch) => {
+  return bindActionCreators({
+    setExchangeInputValue,
+    setExchangeOutputValue,
+    setExchangeRate,
+    setExchangeFee,
+    setInteractionState,
+    setInputToken,
+    setOutputToken,
+    setExchangeType,
+    setInputBalance,
+    setOutputBalance,
+    setAllowanceApprovalState
+  }, dispatch);
+}
 
-  export default connect(mapStateToProps, mapDispatchToProps)(Exchange);
+export default connect(mapStateToProps, mapDispatchToProps)(Exchange);
