@@ -14,6 +14,7 @@ class Links extends Component {
           </a>
         </section>
         <Invest
+          toggled={this.props.web3Store.investToggle}
           token={this.props.exchange.investToken}
           symbolToTokenContract={this.props.symbolToTokenContract}
           symbolToExchangeContract={this.props.symbolToExchangeContract}

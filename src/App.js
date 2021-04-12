@@ -33,12 +33,15 @@ import {  initializeGlobalWeb3,
           toggleInvest } from './actions/web3-actions';
 import {  setInputBalance,
           setOutputBalance,
-          setEthPool1,
-          setEthPool2,
-          setTokenPool1,
-          setTokenPool2,
+          setInvariant1,
+          setInvariant2,
+          setMarketEth1,
+          setMarketEth2,
+          setMarketTokens1,
+          setMarketTokens2,
           setAllowanceApprovalState,
           setInvestToken,
+          setInvestInvariant,
           setInvestEthPool,
           setInvestTokenPool,
           setInvestTokenAllowance,
@@ -47,6 +50,7 @@ import {  setInputBalance,
           setInvestTokenBalance,
           setInvestEthBalance } from './actions/exchange-actions';
 import './App.css';
+import cookie from 'react-cookies'
 import scrollToComponent from 'react-scroll-to-component';
 
 var web3;
@@ -71,6 +75,13 @@ class App extends Component {
     if(web3 === 'undefined') {
       this.props.setWeb3ConnectionStatus(false);
     } else {
+      this.setState({
+        firstRun: cookie.load('firstRun') || true,
+        swapAdded: cookie.load('swapAdded') || false,
+        uniAdded: cookie.load('uniAdded') || false,
+        transactions: cookie.load('transactions') || [],
+      })
+      // we're working with asynchronous redux
       this.props.initializeGlobalWeb3(web3)
       this.getInfoFirstTime();
     }
@@ -81,8 +92,9 @@ class App extends Component {
     // eslint-disable-next-line no-unused-vars
     const web3Subscriber = subscribe('web3Store.connected', state => {
       if(state.web3Store.connected === true && !state.web3Store.metamaskLocked) {
-        this.marketInterval = setInterval(this.getMarketInfo, 10000);
-        this.accountInterval = setInterval(this.getAccountInfo, 10000);
+        //console.log('successfully connected to metamask', state.web3Store.currentMaskAddress);
+        this.marketInterval = setInterval(this.getMarketInfo, 15000);
+        this.accountInterval = setInterval(this.getAccountInfo, 15000);
         this.userInterval = setInterval(this.getUserAddress, 500);
       } else {
         console.log('web3 not connected, getting user address')
@@ -95,7 +107,8 @@ class App extends Component {
   componentWillReceiveProps(nextProps) {
     //console.log('nextProps', nextProps)
   }
-  // TODO: improve getInfoFirstTime and getUserAddress
+  // TODO: getInfoFirstTime and getUserAddress are WET af
+  // lets do something about it
   getInfoFirstTime = () => {
     web3.eth.getAccounts(async (error, result) => {
       if(result.length > 0){
@@ -151,6 +164,9 @@ class App extends Component {
       // send the token contract to redux store
       await this.props.tokenContractReady(tokenAddress[0], tokenContract);
     })
+
+    // this.getAccountInfo();
+    // this.getMarketInfo();
   }
 
   symbolToTokenAddress = (symbol) => {
@@ -195,7 +211,7 @@ class App extends Component {
     }
   }
   // this quadruplet of functions will end up being shared amongst multiple components
-  // will need to bring this out into a higher order component
+  // will need to bring this out into a higher order component (we'll put that to the side for now)
   // TODO: multiple components currently need this function, we will pass it to them via props
   getAccountInfo = () => {
     switch (this.props.web3Store.exchangeType) {
@@ -227,10 +243,13 @@ class App extends Component {
   }
 
   getInvestInfo = () => {
-    var symbol = this.props.exchange.investToken.value;
-    var exchange = this.symbolToExchangeContract(symbol);
-    var token = this.symbolToTokenContract(symbol);
-    var exchangeAddress = this.symbolToExchangeAddress(symbol);
+    var exchange = this.symbolToExchangeContract(this.props.exchange.investToken.value);
+    var token = this.symbolToTokenContract(this.props.exchange.investToken.value);
+    var exchangeAddress = this.symbolToExchangeAddress(this.props.exchange.investToken.value)
+
+    exchange.methods.invariant().call().then((result, error) => {
+      this.props.setInvestInvariant(result);
+    });
 
     exchange.methods.ethPool().call().then((result, error) => {
       this.props.setInvestEthPool(result);
@@ -265,27 +284,35 @@ class App extends Component {
     var exchange;
     if (type === 'input') {
       exchange = this.symbolToExchangeContract(this.props.exchange.inputToken.value);
+      exchange.methods.invariant().call().then((result, error) => {
+        this.props.setInvariant1(result);
+        // console.log('Input Invariant: ' + result);
+      });
 
       exchange.methods.ethPool().call().then((result, error) => {
-        this.props.setEthPool1(result);
+        this.props.setMarketEth1(result);
         // console.log('Input Market ETH: ' + result);
       });
 
       exchange.methods.tokenPool().call().then((result, error) => {
-        this.props.setTokenPool1(result);
+        this.props.setMarketTokens1(result);
         // console.log('Input Market Tokens: ' + result);
       });
 
     } else if (type === 'output') {
         exchange = this.symbolToExchangeContract(this.props.exchange.outputToken.value);
+        exchange.methods.invariant().call().then((result, error) => {
+          this.props.setInvariant2(result);
+          // console.log('Output Invariant: ' + result);
+        });
 
         exchange.methods.ethPool().call().then((result, error) => {
-          this.props.setEthPool2(result);
+          this.props.setMarketEth2(result);
           // console.log('Output Market ETH: ' + result);
         });
 
         exchange.methods.tokenPool().call().then((result, error) => {
-          this.props.setTokenPool2(result);
+          this.props.setMarketTokens2(result);
           // console.log('Output Market Tokens: ' + result);
         });
     }
@@ -431,10 +458,8 @@ class App extends Component {
           symbolToExchangeAddress={this.symbolToExchangeAddress}
         />
         <SharePurchase
-          symbolToTokenContract={this.symbolToTokenContract}
           symbolToExchangeContract={this.symbolToExchangeContract}
           symbolToTokenAddress={this.symbolToTokenAddress}
-          symbolToExchangeAddress={this.symbolToExchangeAddress}
         />
         <About toggleAbout={this.toggleAbout} location={this}/>
         {//<Transactions transactions={this.state.transactions} interaction={this.props.web3Store.interaction} />
@@ -461,10 +486,12 @@ const mapDispatchToProps = (dispatch) => {
     factoryContractReady,
     setInputBalance,
     setOutputBalance,
-    setEthPool1,
-    setEthPool2,
-    setTokenPool1,
-    setTokenPool2,
+    setInvariant1,
+    setInvariant2,
+    setMarketEth1,
+    setMarketEth2,
+    setMarketTokens1,
+    setMarketTokens2,
     setAllowanceApprovalState,
     initializeGlobalWeb3,
     toggleAbout,
@@ -475,6 +502,7 @@ const mapDispatchToProps = (dispatch) => {
     setInvestEthPool,
     setInvestTokenPool,
     setInvestTokenAllowance,
+    setInvestInvariant,
     setInvestShares,
     setUserShares,
     setInvestTokenBalance,

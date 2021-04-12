@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import { setInvestToken,
+         setInvestInvariant,
          setInvestEthPool,
          setInvestTokenPool,
          setInvestShares,
@@ -24,6 +25,7 @@ class Invest extends Component {
       this.getInvestExchangeState();
       this.getInvestBalance();
     } else {
+      this.props.setInvestInvariant(0);
       this.props.setInvestTokenPool(0);
       this.props.setInvestEthPool(0);
       this.props.setInvestTokenBalance(0);
@@ -46,6 +48,10 @@ class Invest extends Component {
 
   getInvestExchangeState = () => {
     var exchange = this.props.symbolToExchangeContract(this.props.exchange.investToken.value);
+
+    exchange.methods.invariant().call().then((result, error) => {
+      this.props.setInvestInvariant(result);
+    });
 
     exchange.methods.ethPool().call().then((result, error) => {
       this.props.setInvestEthPool(result);
@@ -113,6 +119,7 @@ class Invest extends Component {
     })  //Transaction Submitted to blockchain
     .on('confirmation', (confirmationNumber, receipt) => {console.log("Block Confirmations: " + confirmationNumber)})  //Transaction Mined
     .on('error', console.error);
+
   }
 
   render () {
@@ -152,6 +159,11 @@ class Invest extends Component {
             <p>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{(this.props.exchange.investEthBalance/10**18).toFixed(5)} ETH </p>
             <p> {(this.props.exchange.investTokenBalance/10**18).toFixed(5)} {this.props.exchange.investToken.value} </p>
           </div>
+          <div className="investValue border pa2 grey-bg connection">
+            <p> Allowance: </p>
+            <p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{(this.props.exchange.investTokenAllowance/10**18).toFixed(5)} {this.props.exchange.investToken.value} </p>
+            <a className="f-a"  onClick={() => this.approveInvestAllowance()}>Approve ⭞</a>
+          </div>
         </section>
 
       )
@@ -169,6 +181,7 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({
     setInvestToken,
+    setInvestInvariant,
     setInvestEthPool,
     setInvestTokenPool,
     setInvestShares,
