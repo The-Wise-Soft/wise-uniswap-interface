@@ -194,8 +194,6 @@ input[type=number]::-webkit-outer-spin-button {
   color: white;
   height: 48px;
   transition: height .3s ease;
-  background-color: #27AE60;
-  background-color: #2F80ED;
   cursor: pointer;
   font-family: "Inter UI", sans-serif;
 }
@@ -228,8 +226,18 @@ input[type=number]::-webkit-outer-spin-button {
   background-color: #ffffff;
 }
 
+.red-bg{
+  /* background-color: red; */
+  background-color: #d73a49;
+}
+
+.blue-bg{
+  background-color: #2F80ED;
+}
+
 .red{
-  color: red;
+  /* color: red; */
+  color: #d73a49;
 }
 
 .green{

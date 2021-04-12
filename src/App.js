@@ -15,7 +15,7 @@ import About from './components/About';
 import Links from './components/Links';
 import SharePurchase from './components/SharePurchase';
 // import Transactions from './components/Transactions';
-// import Visualization from './components/Visualization';
+import Visualization from './components/Visualization';
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux';
 import { subscribe } from 'redux-subscriber';
@@ -33,15 +33,12 @@ import {  initializeGlobalWeb3,
           toggleInvest } from './actions/web3-actions';
 import {  setInputBalance,
           setOutputBalance,
-          setInvariant1,
-          setInvariant2,
-          setMarketEth1,
-          setMarketEth2,
-          setMarketTokens1,
-          setMarketTokens2,
+          setEthPool1,
+          setEthPool2,
+          setTokenPool1,
+          setTokenPool2,
           setAllowanceApprovalState,
           setInvestToken,
-          setInvestInvariant,
           setInvestEthPool,
           setInvestTokenPool,
           setInvestTokenAllowance,
@@ -50,7 +47,6 @@ import {  setInputBalance,
           setInvestTokenBalance,
           setInvestEthBalance } from './actions/exchange-actions';
 import './App.css';
-import cookie from 'react-cookies'
 import scrollToComponent from 'react-scroll-to-component';
 
 var web3;
@@ -63,25 +59,13 @@ class App extends Component {
     } else {
       web3 = 'undefined'
     }
-
-    this.state = {
-      transactions: []
-    }
   }
   // TODO: get rid of redundant web3 === 'undefined' checks in componentWill/DidMount
-  // STATUS: kind of done
   componentWillMount() {
     //console.log('props', this.props);
     if(web3 === 'undefined') {
       this.props.setWeb3ConnectionStatus(false);
     } else {
-      this.setState({
-        firstRun: cookie.load('firstRun') || true,
-        swapAdded: cookie.load('swapAdded') || false,
-        uniAdded: cookie.load('uniAdded') || false,
-        transactions: cookie.load('transactions') || [],
-      })
-      // we're working with asynchronous redux
       this.props.initializeGlobalWeb3(web3)
       this.getInfoFirstTime();
     }
@@ -92,9 +76,8 @@ class App extends Component {
     // eslint-disable-next-line no-unused-vars
     const web3Subscriber = subscribe('web3Store.connected', state => {
       if(state.web3Store.connected === true && !state.web3Store.metamaskLocked) {
-        //console.log('successfully connected to metamask', state.web3Store.currentMaskAddress);
-        this.marketInterval = setInterval(this.getMarketInfo, 15000);
-        this.accountInterval = setInterval(this.getAccountInfo, 15000);
+        this.marketInterval = setInterval(this.getMarketInfo, 10000);
+        this.accountInterval = setInterval(this.getAccountInfo, 10000);
         this.userInterval = setInterval(this.getUserAddress, 500);
       } else {
         console.log('web3 not connected, getting user address')
@@ -107,8 +90,7 @@ class App extends Component {
   componentWillReceiveProps(nextProps) {
     //console.log('nextProps', nextProps)
   }
-  // TODO: getInfoFirstTime and getUserAddress are WET af
-  // lets do something about it
+  // TODO: improve getInfoFirstTime and getUserAddress
   getInfoFirstTime = () => {
     web3.eth.getAccounts(async (error, result) => {
       if(result.length > 0){
@@ -164,9 +146,6 @@ class App extends Component {
       // send the token contract to redux store
       await this.props.tokenContractReady(tokenAddress[0], tokenContract);
     })
-
-    // this.getAccountInfo();
-    // this.getMarketInfo();
   }
 
   symbolToTokenAddress = (symbol) => {
@@ -211,7 +190,7 @@ class App extends Component {
     }
   }
   // this quadruplet of functions will end up being shared amongst multiple components
-  // will need to bring this out into a higher order component (we'll put that to the side for now)
+  // will need to bring this out into a higher order component
   // TODO: multiple components currently need this function, we will pass it to them via props
   getAccountInfo = () => {
     switch (this.props.web3Store.exchangeType) {
@@ -243,91 +222,76 @@ class App extends Component {
   }
 
   getInvestInfo = () => {
-    var exchange = this.symbolToExchangeContract(this.props.exchange.investToken.value);
-    var token = this.symbolToTokenContract(this.props.exchange.investToken.value);
-    var exchangeAddress = this.symbolToExchangeAddress(this.props.exchange.investToken.value)
+    var symbol = this.props.exchange.investToken.value;
+    if (symbol != "ETH") {
+      var exchange = this.symbolToExchangeContract(symbol);
+      var token = this.symbolToTokenContract(symbol);
+      var exchangeAddress = this.symbolToExchangeAddress(symbol);
 
-    exchange.methods.invariant().call().then((result, error) => {
-      this.props.setInvestInvariant(result);
-    });
+      exchange.methods.ethPool().call().then((result, error) => {
+        this.props.setInvestEthPool(result);
+      });
 
-    exchange.methods.ethPool().call().then((result, error) => {
-      this.props.setInvestEthPool(result);
-    });
+      exchange.methods.tokenPool().call().then((result, error) => {
+        this.props.setInvestTokenPool(result);
+      });
 
-    exchange.methods.tokenPool().call().then((result, error) => {
-      this.props.setInvestTokenPool(result);
-    });
+      exchange.methods.totalShares().call().then((result, error) => {
+        this.props.setInvestShares(result);
+      });
 
-    exchange.methods.totalShares().call().then((result, error) => {
-      this.props.setInvestShares(result);
-    });
+      exchange.methods.getShares(this.props.web3Store.currentMaskAddress).call().then((result, error) => {
+        this.props.setUserShares(result);
+      });
 
-    exchange.methods.getShares(this.props.web3Store.currentMaskAddress).call().then((result, error) => {
-      this.props.setUserShares(result);
-    });
+      token.methods.balanceOf(this.props.web3Store.currentMaskAddress).call((error, result) => {
+        this.props.setInvestTokenBalance(result);
+      });
 
-    token.methods.balanceOf(this.props.web3Store.currentMaskAddress).call((error, balance) => {
-      this.props.setInvestTokenBalance(balance);
-    });
+      token.methods.allowance(this.props.web3Store.currentMaskAddress, exchangeAddress).call((error, result) => {
+        this.props.setInvestTokenAllowance(result);
+      });
 
-    token.methods.allowance(this.props.web3Store.currentMaskAddress, exchangeAddress).call((error, balance) => {
-      this.props.setInvestTokenAllowance(balance);
-    });
-
-    this.props.web3Store.web3.eth.getBalance(this.props.web3Store.currentMaskAddress, (error, balance) => {
-      this.props.setInvestEthBalance(balance);
-    });
+      this.props.web3Store.web3.eth.getBalance(this.props.web3Store.currentMaskAddress, (error, result) => {
+        this.props.setInvestEthBalance(result);
+      });
+    }
   }
 
   getExchangeState = (type) => {
     var exchange;
     if (type === 'input') {
       exchange = this.symbolToExchangeContract(this.props.exchange.inputToken.value);
-      exchange.methods.invariant().call().then((result, error) => {
-        this.props.setInvariant1(result);
-        // console.log('Input Invariant: ' + result);
-      });
 
       exchange.methods.ethPool().call().then((result, error) => {
-        this.props.setMarketEth1(result);
-        // console.log('Input Market ETH: ' + result);
+        this.props.setEthPool1(result);
       });
 
       exchange.methods.tokenPool().call().then((result, error) => {
-        this.props.setMarketTokens1(result);
-        // console.log('Input Market Tokens: ' + result);
+        this.props.setTokenPool1(result);
       });
 
     } else if (type === 'output') {
         exchange = this.symbolToExchangeContract(this.props.exchange.outputToken.value);
-        exchange.methods.invariant().call().then((result, error) => {
-          this.props.setInvariant2(result);
-          // console.log('Output Invariant: ' + result);
-        });
 
         exchange.methods.ethPool().call().then((result, error) => {
-          this.props.setMarketEth2(result);
-          // console.log('Output Market ETH: ' + result);
+          this.props.setEthPool2(result);
         });
 
         exchange.methods.tokenPool().call().then((result, error) => {
-          this.props.setMarketTokens2(result);
-          // console.log('Output Market Tokens: ' + result);
+          this.props.setTokenPool2(result);
         });
     }
   }
 
   getEthBalance = (type) => {
     if (type === 'input') {
-      this.props.web3Store.web3.eth.getBalance(this.props.web3Store.currentMaskAddress, (error, balance) => {
-        this.props.setInputBalance(balance);
-        // console.log('ETH Balance: ' + balance);
+      this.props.web3Store.web3.eth.getBalance(this.props.web3Store.currentMaskAddress, (error, result) => {
+        this.props.setInputBalance(result);
       });
     } else if (type === 'output') {
-        this.props.web3Store.web3.eth.getBalance(this.props.web3Store.currentMaskAddress, (error, balance) => {
-          this.props.setOutputBalance(balance);
-          // console.log('ETH Balance: ' + balance);
+        this.props.web3Store.web3.eth.getBalance(this.props.web3Store.currentMaskAddress, (error, result) => {
+          this.props.setOutputBalance(result);
         });
     }
   }
@@ -336,15 +300,13 @@ class App extends Component {
     var token;
     if (type === 'input') {
       token = this.symbolToTokenContract(this.props.exchange.inputToken.value);
-      token.methods.balanceOf(this.props.web3Store.currentMaskAddress).call((error, balance) => {
-        this.props.setInputBalance(balance);
-        // console.log(this.props.exchange.inputToken.value + ' Balance: ' + balance);
+      token.methods.balanceOf(this.props.web3Store.currentMaskAddress).call((error, result) => {
+        this.props.setInputBalance(result);
       });
     } else if (type === 'output') {
         token = this.symbolToTokenContract(this.props.exchange.outputToken.value);
-        token.methods.balanceOf(this.props.web3Store.currentMaskAddress).call((error, balance) => {
-          this.props.setOutputBalance(balance);
-          // console.log(this.props.exchange.outputToken.value + ' Balance: ' + balance);
+        token.methods.balanceOf(this.props.web3Store.currentMaskAddress).call((error, result) => {
+          this.props.setOutputBalance(result);
         });
     }
   }
@@ -458,8 +420,10 @@ class App extends Component {
           symbolToExchangeAddress={this.symbolToExchangeAddress}
         />
         <SharePurchase
+          symbolToTokenContract={this.symbolToTokenContract}
           symbolToExchangeContract={this.symbolToExchangeContract}
           symbolToTokenAddress={this.symbolToTokenAddress}
+          symbolToExchangeAddress={this.symbolToExchangeAddress}
         />
         <About toggleAbout={this.toggleAbout} location={this}/>
         {//<Transactions transactions={this.state.transactions} interaction={this.props.web3Store.interaction} />
@@ -486,12 +450,10 @@ const mapDispatchToProps = (dispatch) => {
     factoryContractReady,
     setInputBalance,
     setOutputBalance,
-    setInvariant1,
-    setInvariant2,
-    setMarketEth1,
-    setMarketEth2,
-    setMarketTokens1,
-    setMarketTokens2,
+    setEthPool1,
+    setEthPool2,
+    setTokenPool1,
+    setTokenPool2,
     setAllowanceApprovalState,
     initializeGlobalWeb3,
     toggleAbout,
@@ -502,7 +464,6 @@ const mapDispatchToProps = (dispatch) => {
     setInvestEthPool,
     setInvestTokenPool,
     setInvestTokenAllowance,
-    setInvestInvariant,
     setInvestShares,
     setUserShares,
     setInvestTokenBalance,
